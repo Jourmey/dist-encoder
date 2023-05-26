@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package manager;
+option go_package = "./manager";
+
+message worker {
+  string host = 1;
+  string ip = 2;
+}
+
+message videoJob {
+  putInfo inPut = 1;
+  putInfo outPut = 2;
+}
+
+message putInfo{
+  string path = 1;
+  repeated kwArgs kwArgs = 2;
+
+}
+
+message kwArgs {
+  string key = 1;
+  string value = 2;
+}
+
+
+service manager {
+  rpc GetVideoJob(worker) returns(videoJob);
+}
+
