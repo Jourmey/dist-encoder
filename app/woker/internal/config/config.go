@@ -1,9 +1,11 @@
 package config
 
-import (
-	"github.com/zeromicro/go-zero/zrpc"
-)
-
 type Config struct {
-	zrpc.RpcClientConf
+	Args map[string]interface{}
+	Jobs []Job
+}
+
+type Job struct {
+	Input  string
+	Output string
 }
