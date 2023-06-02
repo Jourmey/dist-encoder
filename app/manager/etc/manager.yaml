@@ -1,3 +1,17 @@
-Name: manager.rpc
-ListenOn: 0.0.0.0:8080
-
+# rpc服务端
+RpcServer:
+  Name: "manager.rpc"
+  ListenOn: "0.0.0.0:8080"
+  Mode: "test"
+# rest服务端
+RestConf:
+  Name: "manager.rest"
+  Mode: "pro"
+  Host: "0.0.0.0"
+  Port: 8081
+  Verbose: true
+  Timeout: 0
+  Prometheus:
+    Host: "0.0.0.0"
+    Port: 9101
+    Path: "/metrics"
