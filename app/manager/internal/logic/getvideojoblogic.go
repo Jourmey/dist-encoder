@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"dist-encoder/app/manager/internal/svc"
-	"dist-encoder/pb/manager"
+	"dist-encoder/pb/distribute"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -23,8 +23,9 @@ func NewGetVideoJobLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetVi
 	}
 }
 
-func (l *GetVideoJobLogic) GetVideoJob(in *manager.Worker) (*manager.VideoJob, error) {
+// 工作机器获取工作任务
+func (l *GetVideoJobLogic) GetVideoJob(in *distribute.GetVideoJobRequest) (*distribute.GetVideoJobResponse, error) {
 	// todo: add your logic here and delete this line
 
-	return &manager.VideoJob{}, nil
+	return &distribute.GetVideoJobResponse{}, nil
 }

@@ -8,8 +8,7 @@ import (
 	"dist-encoder/app/manager/internal/handler"
 	"dist-encoder/app/manager/internal/server"
 	"dist-encoder/app/manager/internal/svc"
-	"dist-encoder/pb/manager"
-
+	"dist-encoder/pb/distribute"
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/service"
 	"github.com/zeromicro/go-zero/rest"
@@ -30,7 +29,7 @@ func main() {
 	group := service.NewServiceGroup()
 
 	s := zrpc.MustNewServer(c.RpcServer, func(grpcServer *grpc.Server) { // rpc服务
-		manager.RegisterManagerServer(grpcServer, server.NewManagerServer(ctx))
+		distribute.RegisterDistributeServer(grpcServer, server.NewDistributeServer(ctx))
 
 		if c.RpcServer.Mode == service.DevMode || c.RpcServer.Mode == service.TestMode {
 			reflection.Register(grpcServer)

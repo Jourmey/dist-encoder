@@ -1,0 +1,123 @@
+syntax = "proto3";
+
+package distribute;
+option go_package = "./distribute";
+
+// 任务分发管理
+service Distribute {
+  // 工作机器获取工作任务
+  rpc GetVideoJob(GetVideoJobRequest) returns (GetVideoJobResponse) {}
+  // 工作机器上报工作状态
+  rpc SetVideoJobResult(SetVideoJobResultRequest) returns (SetVideoJobResultResponse) {}
+
+
+  //// 任务配置管理
+  //service JobService {
+
+  // QueryVideoJob 查询转码任务
+  rpc QueryVideoJob(QueryVideoJobRequest) returns (QueryVideoJobResponse) {}
+  // AddVideoJob 添加视频转码任务
+  rpc AddVideoJob(AddVideoJobRequest) returns (AddVideoJobResponse) {}
+
+
+  // ListConvertCnf 查询转码任务
+  rpc ListConvertCnf(ListConvertCnfRequest) returns (ListConvertCnfResponse) {}
+  // AddConvertCnf 添加视频转码任务
+  rpc AddConvertCnf(AddConvertCnfRequest) returns (AddConvertCnfResponse) {}
+}
+
+// GetVideoJob 工作机器获取工作任务
+message GetVideoJobRequest {
+  string host = 1;
+  string ip = 2;
+}
+
+// GetVideoJob 工作机器获取工作任务
+message GetVideoJobResponse {
+  VideoJob job = 1;
+  ConvertCnf convert_cnf = 2;
+}
+
+// 任务状态
+enum Status {
+  Failed = 0;
+  Success = 1;
+}
+
+// SetVideoJobResult 工作机器上报工作状态
+message SetVideoJobResultRequest {
+  int64 job_id = 1;
+  Status status = 2;
+}
+
+// SetVideoJobResult 工作机器上报工作状态
+message SetVideoJobResultResponse {}
+
+
+message VideoJob {
+  int64 job_id = 1;
+  string in_put = 2;
+  string out_put = 3;
+
+  int64 convert_id = 4;
+  Status status = 5;
+}
+
+message ConvertCnf {
+  int64 cnf_id = 1;
+  repeated KwArgs in_kw_args = 2;
+  repeated KwArgs out_kw_args = 3;
+}
+
+// KwArgs 输出参数
+message KwArgs {
+  string key = 1;
+  string value = 2;
+}
+
+message Page {
+  string order_by = 1;
+  string order = 2;
+  int64 offset = 3;
+  int64 limit = 4;
+}
+
+
+// QueryVideoJob 查询转码任务
+message QueryVideoJobRequest {
+  Page page = 1;
+}
+
+message QueryVideoJobResponse {
+  Page page = 1;
+  repeated VideoJob jobs = 2;
+}
+
+// AddVideoJob 添加视频转码任务
+message AddVideoJobRequest {
+  string in_put = 2;
+  string out_put = 3;
+  int64 convert_id = 4;
+}
+
+message AddVideoJobResponse {
+  int64 job_id = 1;
+}
+
+
+// ListConvertCnf 查询转码任务
+message ListConvertCnfRequest {}
+
+message ListConvertCnfResponse {
+  repeated ConvertCnf converts = 1;
+}
+
+// AddConvertCnf 添加视频转码任务
+message AddConvertCnfRequest {
+  repeated KwArgs in_kw_args = 2;
+  repeated KwArgs out_kw_args = 3;
+}
+
+message AddConvertCnfResponse {
+  int64 cnf_id = 1;
+}
