@@ -17,14 +17,29 @@ type (
 	ConvertJobModel interface {
 		convertJobModel
 
-		FindOneByStatus(ctx context.Context, status int64) (res *ConvertJob, err error)                               // 根据类型和状态查询单个任务
-		UpdateStatus(ctx context.Context, id int64, status int64, host string, ip string) (res sql.Result, err error) // 更新任务状态
+		FindOneByStatus(ctx context.Context, status int64) (res *ConvertJob, err error)                                      // 根据类型和状态查询单个任务
+		UpdateStatus(ctx context.Context, id int64, status int64) (res sql.Result, err error)                                // 更新任务状态
+		UpdateStatusAndHost(ctx context.Context, id int64, status int64, host string, ip string) (res sql.Result, err error) // 更新任务状态
+		Query(ctx context.Context, orderBy string, offset int64, limit int64) (resp []*ConvertJob, err error)
 	}
 
 	customConvertJobModel struct {
 		*defaultConvertJobModel
 	}
 )
+
+func (c *customConvertJobModel) Query(ctx context.Context, orderBy string, offset int64, limit int64) (resp []*ConvertJob, err error) {
+	s, args, err := c.rowBuilder().
+		Offset(uint64(offset)).
+		Limit(uint64(limit)).
+		OrderBy(orderBy).ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.conn.QueryRowsCtx(ctx, &resp, s, args...)
+	return
+}
 
 func (c *customConvertJobModel) FindOneByStatus(ctx context.Context, status int64) (res *ConvertJob, err error) {
 	s, args, err := c.rowBuilder().Where("status = ?", status).Limit(1).ToSql()
@@ -44,7 +59,15 @@ func (c *customConvertJobModel) FindOneByStatus(ctx context.Context, status int6
 	}
 }
 
-func (c *customConvertJobModel) UpdateStatus(ctx context.Context, id int64, status int64, host string, ip string) (res sql.Result, err error) {
+func (c *customConvertJobModel) UpdateStatus(ctx context.Context, id int64, status int64) (res sql.Result, err error) {
+	s, args, err := squirrel.Update(c.table).
+		Set("status", status).
+		Where("id = ?", id).ToSql()
+
+	return c.conn.ExecCtx(ctx, s, args...)
+}
+
+func (c *customConvertJobModel) UpdateStatusAndHost(ctx context.Context, id int64, status int64, host string, ip string) (res sql.Result, err error) {
 
 	s, args, err := squirrel.Update(c.table).
 		Set("status", status).

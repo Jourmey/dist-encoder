@@ -6,7 +6,6 @@ import (
 	"dist-encoder/app/manager/internal/svc"
 	"dist-encoder/pb/distribute"
 
-	"github.com/zeromicro/go-zero/core/jsonx"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -34,7 +33,7 @@ func (l *GetVideoJobLogic) GetVideoJob(in *distribute.GetVideoJobRequest) (*dist
 		return nil, err
 	}
 
-	_, err = l.svcCtx.ConvertJobModel.UpdateStatus(l.ctx, job.Id, int64(distribute.Status_Doing), in.Host, in.Ip)
+	_, err = l.svcCtx.ConvertJobModel.UpdateStatusAndHost(l.ctx, job.Id, int64(distribute.Status_Doing), in.Host, in.Ip)
 	if err != nil {
 		return nil, err
 	}
@@ -57,22 +56,7 @@ func (l *GetVideoJobLogic) GetVideoJob(in *distribute.GetVideoJobRequest) (*dist
 			return nil, err
 		}
 
-		var (
-			inKwArgs  []*distribute.KwArgs
-			outKwArgs []*distribute.KwArgs
-		)
-
-		if conf.InArgs.Valid {
-
-			_ = jsonx.UnmarshalFromString(conf.InArgs.String, &inKwArgs)
-			_ = jsonx.UnmarshalFromString(conf.OutArgs.String, &outKwArgs)
-		}
-
-		resp.ConvertCnf = &distribute.ConvertCnf{
-			CnfId:     conf.Id,
-			InKwArgs:  inKwArgs,
-			OutKwArgs: outKwArgs,
-		}
+		resp.ConvertCnf = transformConvertCnf(conf)
 	}
 
 	return resp, nil

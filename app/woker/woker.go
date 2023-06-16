@@ -30,7 +30,7 @@ func main() {
 	for {
 		time.Sleep(10 * time.Second)
 
-		res, err := client.GetVideoJob(context.Background(), &distributeclient.GetVideoJobRequest{
+		res, err := client.GetVideoJob(context.Background(), &distribute.GetVideoJobRequest{
 			Host: sysx.Hostname(),
 			Ip:   "",
 		})
@@ -44,16 +44,33 @@ func main() {
 			continue
 		}
 
-		inputKwargs, outputKwargs := getKwargs(res.ConvertCnf)
+		var (
+			inputKwargs  ffmpeg.KwArgs
+			outputKwargs ffmpeg.KwArgs
+			status       distribute.Status
+		)
+
+		inputKwargs, outputKwargs = getKwargs(res.ConvertCnf)
 
 		err = ffmpeg.Input(res.Job.InPut, inputKwargs).Output(res.Job.OutPut, outputKwargs).OverWriteOutput().ErrorToStdOut().Run()
 		if err != nil {
+			status = distribute.Status_Failed
+
 			logx.Error("ffmpeg failed. err:", err)
 		} else {
+			status = distribute.Status_Success
+
 			logx.Error("ffmpeg success. err:", err)
 		}
-	}
 
+		_, err = client.SetVideoJobResult(context.Background(), &distribute.SetVideoJobResultRequest{
+			JobId:  res.Job.JobId,
+			Status: status,
+		})
+		if err != nil {
+			logx.Error("callback failed. err:", err)
+		}
+	}
 }
 
 func getKwargs(cnf *distribute.ConvertCnf) (inputKwargs ffmpeg.KwArgs, outputKwargs ffmpeg.KwArgs) {

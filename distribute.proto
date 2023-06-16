@@ -79,9 +79,8 @@ message KwArgs {
 
 message Page {
   string order_by = 1;
-  string order = 2;
-  int64 offset = 3;
-  int64 limit = 4;
+  int64 offset = 2;
+  int64 limit = 3;
 }
 
 

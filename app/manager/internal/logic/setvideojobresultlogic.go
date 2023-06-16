@@ -25,7 +25,11 @@ func NewSetVideoJobResultLogic(ctx context.Context, svcCtx *svc.ServiceContext) 
 
 // 工作机器上报工作状态
 func (l *SetVideoJobResultLogic) SetVideoJobResult(in *distribute.SetVideoJobResultRequest) (*distribute.SetVideoJobResultResponse, error) {
-	// todo: add your logic here and delete this line
+
+	_, err := l.svcCtx.ConvertJobModel.UpdateStatus(l.ctx, in.JobId, int64(in.Status))
+	if err != nil {
+		return nil, err
+	}
 
 	return &distribute.SetVideoJobResultResponse{}, nil
 }

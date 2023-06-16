@@ -2,7 +2,8 @@ package logic
 
 import (
 	"context"
-
+	"database/sql"
+	"dist-encoder/app/manager/internal/model"
 	"dist-encoder/app/manager/internal/svc"
 	"dist-encoder/pb/distribute"
 
@@ -25,7 +26,22 @@ func NewAddVideoJobLogic(ctx context.Context, svcCtx *svc.ServiceContext) *AddVi
 
 // AddVideoJob 添加视频转码任务
 func (l *AddVideoJobLogic) AddVideoJob(in *distribute.AddVideoJobRequest) (*distribute.AddVideoJobResponse, error) {
-	// todo: add your logic here and delete this line
 
-	return &distribute.AddVideoJobResponse{}, nil
+	data := &model.ConvertJob{
+		InPut:  in.InPut,
+		OutPut: in.OutPut,
+
+		Status: int64(distribute.Status_Waiting),
+		Host:   sql.NullString{},
+		Ip:     sql.NullString{},
+	}
+	res, err := l.svcCtx.ConvertJobModel.Insert(l.ctx, data)
+	if err != nil {
+		return nil, err
+	}
+	id, _ := res.LastInsertId()
+
+	return &distribute.AddVideoJobResponse{
+		JobId: id,
+	}, nil
 }

@@ -25,7 +25,20 @@ func NewListConvertCnfLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Li
 
 // ListConvertCnf 查询转码任务
 func (l *ListConvertCnfLogic) ListConvertCnf(in *distribute.ListConvertCnfRequest) (*distribute.ListConvertCnfResponse, error) {
-	// todo: add your logic here and delete this line
 
-	return &distribute.ListConvertCnfResponse{}, nil
+	res, err := l.svcCtx.ConvertConfigModel.FindAll(l.ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	converts := make([]*distribute.ConvertCnf, 0, len(res))
+
+	for i := 0; i < len(res); i++ {
+
+		converts = append(converts, transformConvertCnf(res[i]))
+	}
+
+	return &distribute.ListConvertCnfResponse{
+		Converts: converts,
+	}, nil
 }
