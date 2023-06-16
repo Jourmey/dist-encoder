@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
+	"dist-encoder/app/manager/distributeclient"
+	"dist-encoder/pb/distribute"
 	"flag"
 	"time"
 
-	"dist-encoder/app/manager/managerclient"
 	"dist-encoder/app/woker/internal/config"
-	"dist-encoder/pb/manager"
 
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 	"github.com/zeromicro/go-zero/core/conf"
@@ -25,12 +25,12 @@ func main() {
 	conf.MustLoad(*configFile, &c)
 
 	cli := zrpc.MustNewClient(c.RpcClientConf)
-	client := managerclient.NewManager(cli)
+	client := distributeclient.NewDistribute(cli)
 
 	for {
-		time.Sleep(1 * time.Second)
+		time.Sleep(10 * time.Second)
 
-		res, err := client.GetVideoJob(context.Background(), &manager.Worker{
+		res, err := client.GetVideoJob(context.Background(), &distributeclient.GetVideoJobRequest{
 			Host: sysx.Hostname(),
 			Ip:   "",
 		})
@@ -40,16 +40,13 @@ func main() {
 			continue
 		}
 
-		if res == nil || res.GetInPut() == nil || res.GetOutPut() == nil {
+		if res == nil || res.Job == nil {
 			continue
 		}
 
-		var (
-			inputFilename, inputKwargs   = getFfmpegPut(res.GetInPut())
-			outputFilename, outputKwargs = getFfmpegPut(res.GetInPut())
-		)
+		inputKwargs, outputKwargs := getKwargs(res.ConvertCnf)
 
-		err = ffmpeg.Input(inputFilename, inputKwargs).Output(outputFilename, outputKwargs).OverWriteOutput().ErrorToStdOut().Run()
+		err = ffmpeg.Input(res.Job.InPut, inputKwargs).Output(res.Job.OutPut, outputKwargs).OverWriteOutput().ErrorToStdOut().Run()
 		if err != nil {
 			logx.Error("ffmpeg failed. err:", err)
 		} else {
@@ -59,17 +56,26 @@ func main() {
 
 }
 
-func getFfmpegPut(put *manager.PutInfo) (filename string, kwargs ffmpeg.KwArgs) {
-	if put == nil {
-		return "", nil
+func getKwargs(cnf *distribute.ConvertCnf) (inputKwargs ffmpeg.KwArgs, outputKwargs ffmpeg.KwArgs) {
+
+	if cnf == nil {
+		return nil, nil
 	}
 
-	filename = put.GetPath()
-	args := put.GetKwArgs()
+	if len(cnf.InKwArgs) != 0 {
+		inputKwargs = make(map[string]interface{}, len(cnf.InKwArgs))
 
-	kwargs = make(ffmpeg.KwArgs, len(args))
-	for i := 0; i < len(args); i++ {
-		kwargs[args[i].GetKey()] = args[i].GetValue()
+		for i := 0; i < len(cnf.InKwArgs); i++ {
+			inputKwargs[cnf.InKwArgs[i].Key] = cnf.InKwArgs[i].Value
+		}
+	}
+
+	if len(cnf.OutKwArgs) != 0 {
+		outputKwargs = make(map[string]interface{}, len(cnf.OutKwArgs))
+
+		for i := 0; i < len(cnf.OutKwArgs); i++ {
+			outputKwargs[cnf.OutKwArgs[i].Key] = cnf.OutKwArgs[i].Value
+		}
 	}
 
 	return

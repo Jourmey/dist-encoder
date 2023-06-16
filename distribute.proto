@@ -40,8 +40,10 @@ message GetVideoJobResponse {
 
 // 任务状态
 enum Status {
-  Failed = 0;
-  Success = 1;
+  Waiting = 0;
+  Doing = 1;
+  Success = 2;
+  Failed = 3;
 }
 
 // SetVideoJobResult 工作机器上报工作状态

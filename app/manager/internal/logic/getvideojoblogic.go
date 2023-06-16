@@ -2,10 +2,11 @@ package logic
 
 import (
 	"context"
-
+	"dist-encoder/app/manager/internal/model"
 	"dist-encoder/app/manager/internal/svc"
 	"dist-encoder/pb/distribute"
 
+	"github.com/zeromicro/go-zero/core/jsonx"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -25,7 +26,54 @@ func NewGetVideoJobLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetVi
 
 // 工作机器获取工作任务
 func (l *GetVideoJobLogic) GetVideoJob(in *distribute.GetVideoJobRequest) (*distribute.GetVideoJobResponse, error) {
-	// todo: add your logic here and delete this line
 
-	return &distribute.GetVideoJobResponse{}, nil
+	job, err := l.svcCtx.ConvertJobModel.FindOneByStatus(l.ctx, int64(distribute.Status_Waiting))
+	if err == model.ErrNotFound {
+		return &distribute.GetVideoJobResponse{}, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	_, err = l.svcCtx.ConvertJobModel.UpdateStatus(l.ctx, job.Id, int64(distribute.Status_Doing), in.Host, in.Ip)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &distribute.GetVideoJobResponse{
+		Job: &distribute.VideoJob{
+			JobId:     job.Id,
+			InPut:     job.InPut,
+			OutPut:    job.OutPut,
+			ConvertId: job.ConvertId,
+			Status:    distribute.Status(job.Status),
+		},
+		ConvertCnf: nil,
+	}
+
+	if job.ConvertId != 0 {
+
+		conf, err := l.svcCtx.ConvertConfigModel.FindOne(l.ctx, job.ConvertId)
+		if err != nil {
+			return nil, err
+		}
+
+		var (
+			inKwArgs  []*distribute.KwArgs
+			outKwArgs []*distribute.KwArgs
+		)
+
+		if conf.InArgs.Valid {
+
+			_ = jsonx.UnmarshalFromString(conf.InArgs.String, &inKwArgs)
+			_ = jsonx.UnmarshalFromString(conf.OutArgs.String, &outKwArgs)
+		}
+
+		resp.ConvertCnf = &distribute.ConvertCnf{
+			CnfId:     conf.Id,
+			InKwArgs:  inKwArgs,
+			OutKwArgs: outKwArgs,
+		}
+	}
+
+	return resp, nil
 }
